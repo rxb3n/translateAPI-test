@@ -29,7 +29,21 @@ const players = {};
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
-  socket.on('join-room', ({ username, roomCode }) => {
+  socket.on('start-game', ({ roomCode }) => {
+    io.to(roomCode).emit('navigate-to-game');
+    const gameDataWithLanguage = {
+      word,
+      answers: allAnswers,
+      players: Object.values(playersInRoom).map(player => ({
+        id: player.id,
+        username: player.username,
+        language: player.language, // Include selected language
+      })),
+    };
+    io.to(roomCode).emit('game-data', gameDataWithLanguage);
+  });
+
+  socket.on('join-room', ({ username, roomCode, language }) => {
     // Make sure to handle the unique player ID (socket.id)
     const playerId = socket.id;
   
@@ -40,6 +54,7 @@ io.on('connection', (socket) => {
       roomCode,
       ready: false,
       score: 0,
+      language, // Include selected language
     };
   
     // Update the rooms object to include the new player

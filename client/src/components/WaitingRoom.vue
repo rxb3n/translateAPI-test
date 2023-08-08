@@ -3,7 +3,7 @@
     <div class="room-code">Room Code: {{ roomCode }}</div>
     <div class="username">Username: {{ username }}</div>
     <div v-for="player in players" :key="player.id" :class="{ 'ready': player.isReady }">
-      {{ player.username }}
+      {{ player.username }} ({{ player.language }})
       <span class="status">{{ player.ready ? 'Ready' : 'Not Ready' }}</span>
     </div>
     
@@ -22,6 +22,10 @@ export default {
   props: {
     roomCode: String, // Prop to receive the room code from the parent component
     username: String, // Prop to receive the username from the route
+  },
+
+  created() {
+    this.$socket.on('navigate-to-game', this.navigateToGame);
   },
 
   mounted() {
@@ -50,10 +54,14 @@ export default {
 
   startGame() {
       if (this.allPlayersReady) {
-        this.$router.push({ name: 'GameScreen', params: { roomCode: this.roomCode } });
+        this.$socket.emit('start-game', { roomCode: this.roomCode });
       } else {
         console.log('Cannot start game. All players must be ready.');
       }
+    },
+
+    navigateToGame() {
+      this.$router.push({ name: 'GameScreen', params: { roomCode: this.roomCode } });
     },
 
     updatePlayerList(data) {

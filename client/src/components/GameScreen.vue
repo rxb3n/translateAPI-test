@@ -1,5 +1,10 @@
 <template>
     <div class="game-screen">
+      <div class="room-code">Room Code: {{ roomCode }}</div>
+    <div class="username">Username: {{ username }}</div>
+    <div v-for="player in players" :key="player.id">
+      {{ player.username }} ({{ player.language }})
+    </div>
       <div class="word">{{ currentWord }}</div>
       <div class="answer" v-for="answer in answers" :key="answer.id" @click="selectAnswer(answer)">
         {{ answer.text }}
