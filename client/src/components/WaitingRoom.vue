@@ -9,6 +9,10 @@
     
     <!-- Ready button -->
     <button @click="ready" :disabled="isReady">Ready</button>
+
+     <!-- Start button -->
+     <button @click="startGame" :disabled="!allPlayersReady">Start</button>
+
   </div>
 </template>
 
@@ -30,12 +34,23 @@ export default {
       isReady: false, // Track the player's own readiness status
     };
   },
+
+  computed: {
+    allPlayersReady() {
+      return this.players.length > 0 && this.players.every(player => player.ready);
+    },
+  },
+
   methods: {
     ready() {
     this.isReady = !this.isReady; // Toggle readiness status
     this.$socket.emit('player-ready', { isReady: this.isReady }); // Emit the event to the server
     console.log("you're ready", this.isReady)
   },
+
+  startGame() {
+      // Add logic to start the game
+    },
 
     updatePlayerList(data) {
       console.log('Received player list:', data);
