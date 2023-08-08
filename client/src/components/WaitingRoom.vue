@@ -49,7 +49,11 @@ export default {
   },
 
   startGame() {
-      // Add logic to start the game
+      if (this.allPlayersReady) {
+        this.$router.push({ name: 'GameScreen', params: { roomCode: this.roomCode } });
+      } else {
+        console.log('Cannot start game. All players must be ready.');
+      }
     },
 
     updatePlayerList(data) {

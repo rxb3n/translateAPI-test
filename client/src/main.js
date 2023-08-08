@@ -26,9 +26,11 @@ const router = createRouter({
       }),
     },
 
-    { 
-      path: '/game-screen', 
-      component: GameScreen 
+    {
+      path: '/game/:roomCode', // Define the route path with a parameter
+      name: 'GameScreen', // Name the route
+      component: GameScreen, // Specify the component
+      props: true, // Pass route parameters as props to the component
     },
 
   ],
