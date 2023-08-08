@@ -1,7 +1,7 @@
 <template>
     <div class="join-room">
       <input v-model="username" type="text" placeholder="Enter your username" />
-      <input v-model="roomCode" placeholder="Enter room code" maxlength="4" />
+      <input v-model="roomCode" type="text" placeholder="Enter room code" maxlength="6" />
       <button @click="joinRoom">Join Room</button>
     </div>
   </template>

@@ -32,44 +32,43 @@ io.on('connection', (socket) => {
   socket.on('join-room', ({ username, roomCode }) => {
     // Make sure to handle the unique player ID (socket.id)
     const playerId = socket.id;
+  
+    // Create player data object
     const playerData = {
       id: playerId,
       username,
-      roomCode, // Make sure roomCode is correctly added here
+      roomCode,
       ready: false,
       score: 0,
     };
+  
+    // Update the rooms object to include the new player
+    if (!rooms[roomCode]) {
+      rooms[roomCode] = []; // Initialize an empty array for the room if it doesn't exist
+    }
+    rooms[roomCode].push(playerData);
+  
+    // Add player data to the players object using socket ID as the key
     players[playerId] = playerData;
-    
-
-    // Add player data to players object using socket ID as the key
-    players[playerId] = playerData;
-
+  
     // Join the room using the provided roomCode
     socket.join(roomCode);
-
+  
     // Emit 'player-list' event to the room with updated player list
     updatePlayerList(roomCode);
-
+  
     console.log('Player joined:', playerData);
   });
 
   // Handle "Player Ready" event
   socket.on('player-ready', ({ isReady }) => {
-    console.log('Player is ready on server:', isReady);
-  
     const roomCode = findRoomCode(socket.id);
-    console.log('Room code:', roomCode);
-    console.log('Current room players:', rooms[roomCode]);
     if (roomCode && rooms[roomCode]) {
       const player = rooms[roomCode].find((player) => player.id === socket.id);
-      player.isReady = isReady;
-      updatePlayerList(roomCode);
-      
-      // Check if all players are ready
-      const allPlayersReady = rooms[roomCode].every((player) => player.isReady);
-      console.log('All players ready:', allPlayersReady);
-  
+      player.ready = isReady; // Update the ready property of the player object
+      updatePlayerList(roomCode); // Emit updated player list to the room
+      // Check if all players are ready and emit 'start-game' if needed
+      const allPlayersReady = rooms[roomCode].every((player) => player.ready);
       if (allPlayersReady) {
         io.to(roomCode).emit('start-game');
       }
@@ -90,9 +89,19 @@ io.on('connection', (socket) => {
   // Handle disconnection
   socket.on('disconnect', () => {
     console.log('A user disconnected:', socket.id);
-    delete players[socket.id];
-    updatePlayerList();
-  });
+    const roomCode = findRoomCode(socket.id);
+    if (roomCode) {
+      const playerIndex = rooms[roomCode].findIndex((player) => player.id === socket.id);
+      if (playerIndex !== -1) {
+        rooms[roomCode].splice(playerIndex, 1); // Remove the player from the room
+  
+        // Remove player from the players object
+        delete players[socket.id];
+  
+        updatePlayerList(roomCode); // Update the player list for the room
+      }
+    }
+  });  
 });
 
 // Update the player list for a specific room or all rooms
@@ -101,6 +110,12 @@ function updatePlayerList(roomCode) {
   const playersInRoom = Object.values(players).filter((player) => player.roomCode === roomCode);
   io.to(roomCode).emit('player-list', playersInRoom);
   console.log('Emitted player list:', playersInRoom);
+
+  // Check if the updated player list is empty
+  if (playersInRoom.length === 0) {
+    console.log('All players left the room. Cleaning up...');
+    delete rooms[roomCode]; // Remove the room from the rooms object
+  }
 }
 
 
@@ -112,7 +127,7 @@ function areAllPlayersReady(roomCode) {
 
 function findRoomCode(socketId) {
   console.log('Searching for room code for socket ID:', socketId);
-      console.log("current rooms are", rooms)
+  console.log("current rooms are", rooms)
   for (const roomCode in rooms) {
     if (rooms[roomCode].some((player) => player.id === socketId)) {
       console.log('Room code found:', roomCode);
